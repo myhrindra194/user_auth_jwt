@@ -4,33 +4,27 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-/* Récupération du header bearer */
 export const extractBearerToken = (headerValue) => {
     if (typeof headerValue !== 'string') {
         return false
     }
 
     const matches = headerValue.match(/(bearer)\s+(\S+)/i)
-    return matches && matches[2]
+    return matches && matches[2];
 }
 
-/* Vérification du token */
 export const authenticate = (req, res, next) => {
-    // Récupération du token
     const token = req.headers.authorization && extractBearerToken(req.headers.authorization)
 
-    // Présence d'un token
     if (!token) {
         return res.status(401).json({ message: 'Error. Need a token' })
     }
 
-    // Véracité du token
-    jwt.verify(token, process.env.SECRET_KEY, (err, decode) => {
+    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
         if (err) {
             res.status(401).json({ message: 'Error. Bad token' })
         } else {
-            
-            req.userId = decode.userId;
+            req.userId = decoded.userId;
             return next()
         }
     })

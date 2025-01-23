@@ -22,11 +22,15 @@ loginRoute.post("/", async (req, res) => {
         }
 
         const user = await UserModel.findOne({email: email});
+
+
+        if(!user){
+            return res.json({msg: "Invalid email"});
+        }
         const verifyPassword = await bcrypt.compare(password, user.password);
 
-
-        if(!user || !verifyPassword){
-            return res.json({msg: "Invalid email or password"});
+        if(!verifyPassword){
+            return res.json({msg: "Invalid password"})
         }
 
         const token = jwt.sign({
@@ -37,7 +41,6 @@ loginRoute.post("/", async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        
         return res.status(500).json({msg: "Internal Server Error"});
     }
 });
