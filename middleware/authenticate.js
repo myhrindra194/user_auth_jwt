@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 /* Récupération du header bearer */
-export const extractBearerToken = headerValue => {
+export const extractBearerToken = (headerValue) => {
     if (typeof headerValue !== 'string') {
         return false
     }
@@ -15,7 +15,7 @@ export const extractBearerToken = headerValue => {
 }
 
 /* Vérification du token */
-export const checkTokenMiddleware = (req, res, next) => {
+export const authenticate = (req, res, next) => {
     // Récupération du token
     const token = req.headers.authorization && extractBearerToken(req.headers.authorization)
 
@@ -25,10 +25,12 @@ export const checkTokenMiddleware = (req, res, next) => {
     }
 
     // Véracité du token
-    jwt.verify(token, process.env.SECRET_KEY, (err, decodedToken) => {
+    jwt.verify(token, process.env.SECRET_KEY, (err, decode) => {
         if (err) {
             res.status(401).json({ message: 'Error. Bad token' })
         } else {
+            
+            req.userId = decode.userId;
             return next()
         }
     })

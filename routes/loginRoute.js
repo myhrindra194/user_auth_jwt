@@ -10,7 +10,6 @@ dotenv.config();
 const loginRoute = express.Router();
 
 loginRoute.use(bodyParser.urlencoded({extended: true}));
-loginRoute.use(bodyParser.json());
 
 
 loginRoute.post("/", async (req, res) => {
@@ -23,20 +22,22 @@ loginRoute.post("/", async (req, res) => {
         }
 
         const user = await UserModel.findOne({email: email});
-        const verifyPassword = bcrypt.compare(user.password, password);
+        const verifyPassword = await bcrypt.compare(password, user.password);
+
 
         if(!user || !verifyPassword){
             return res.json({msg: "Invalid email or password"});
         }
 
         const token = jwt.sign({
-            id: user._id,
-            email: user.email,
-        }, process.env.SECRET_KEY, {expiresIn: '3hours'});
+            userId: user.userId,
+        }, process.env.SECRET_KEY, {expiresIn: '1h'});
 
         return res.json({ token: token });
 
     } catch (error) {
+        console.log(error);
+        
         return res.status(500).json({msg: "Internal Server Error"});
     }
 });

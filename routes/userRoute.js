@@ -1,13 +1,13 @@
-import bcrypt from "bcrypt";
 import bodyParser from "body-parser";
 import express from "express";
+import { authenticate } from "../middleware/authenticate.js";
+import authorization from "../middleware/authorization.js";
 import UserModel from "../models/User.js";
 
 
 const userRoute = express.Router();
 
 userRoute.use(bodyParser.urlencoded({extended: true}));
-userRoute.use(bodyParser.json());
 
 userRoute.get("/", async(req, res) => {
    try {
@@ -31,56 +31,22 @@ userRoute.get("/:userId", async(req, res) => {
     }
 })
 
-userRoute.post("/", async(req, res) => {
-    const {username, email, password} = req.body;
 
-    const hashPassword = await bcrypt.hash(password, 8);
-
-   try {
-    const data = await UserModel.create({
-        username: username,
-        email: email,
-        password: hashPassword
-    })
-
-    res.status(201).json({msg:`User created successfully ${data.userId}`, data: data});
-
-   } catch (error) {
-
-        console.log(error);
-        res.status(400).json({msg: "All fields are required"});
-   }
-})
-
-
-userRoute.delete("/:userId", async(req, res) => {
-    const userId = +req.params.userId;
-    try {
-        await UserModel.findOneAndDelete(userId);
-        res.status(201).json({msg:`User ${userId} deleted successfully`});
-
-    } catch (error) {
-        console.log(error);
-        res.status(404).json({msg:`Failed to delete user id:${userId}`});
-    }
-})
-
-userRoute.patch("/:userId", async(req, res) => {
+userRoute.patch("/:userId", authenticate, authorization, async(req, res) => {
     const userId = req.params.userId;
-    const {username, email, password} = req.body;
+    const { username, email, password } = req.body;
 
     try {
-     const data = await UserModel.findOneAndUpdate({userId: userId}, {
-         username: username,
-         email: email,
-         password: password
-     })
+        const data = await UserModel.findOneAndUpdate({userId: userId}, {
+            username: username,
+            email: email,
+            password: password
+        })
 
-     res.status(200).json({msg:`User updated successfully ${userId}`, data: data});
+        return res.status(200).json({msg:`User updated successfully ${userId}`});
 
     } catch (error) {
-        console.log(error);
-        res.status(400).json({msg:`Failed to update user id:${userId}`});
+        return res.status(400).json({msg:`Failed to update user id:${userId}`});
     }
  })
 
