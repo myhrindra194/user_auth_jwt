@@ -1,8 +1,10 @@
+import bcrypt from "bcrypt";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import express from "express";
 import jwt from 'jsonwebtoken';
 import UserModel from "../models/User.js";
+
 
 dotenv.config();
 const loginRoute = express.Router();
@@ -21,8 +23,9 @@ loginRoute.post("/", async (req, res) => {
         }
 
         const user = await UserModel.findOne({email: email});
+        const verifyPassword = bcrypt.compare(user.password, password);
 
-        if(!user || user.password != password){
+        if(!user || !verifyPassword){
             return res.json({msg: "Invalid email or password"});
         }
 

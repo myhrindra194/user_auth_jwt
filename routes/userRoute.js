@@ -1,6 +1,8 @@
+import bcrypt from "bcrypt";
 import bodyParser from "body-parser";
 import express from "express";
 import UserModel from "../models/User.js";
+
 
 const userRoute = express.Router();
 
@@ -32,11 +34,13 @@ userRoute.get("/:userId", async(req, res) => {
 userRoute.post("/", async(req, res) => {
     const {username, email, password} = req.body;
 
+    const hashPassword = await bcrypt.hash(password, 8);
+
    try {
     const data = await UserModel.create({
         username: username,
         email: email,
-        password: password
+        password: hashPassword
     })
 
     res.status(201).json({msg:`User created successfully ${data.userId}`, data: data});
